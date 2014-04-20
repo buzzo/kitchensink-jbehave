@@ -1,0 +1,152 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<parent>
+		<groupId>br.com.buzzo</groupId>
+		<artifactId>kitchensink-jbehave</artifactId>
+		<version>1.0.0</version>
+		<relativePath>..</relativePath>
+	</parent>
+
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>jbehave-demo</artifactId>
+	<name>JBehave for Kitchensink</name>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.source>1.7</maven.compiler.source>
+		<maven.compiler.target>1.7</maven.compiler.target>
+		<!-- endereço do servidor jboss -->
+		<jboss.host.url>http://localhost:8080/jboss-as-kitchensink</jboss.host.url>
+		<!-- caminho para a instalação do wildfly -->
+		<wildfly8x.path>/opt/wildfly-8.0.0.Final</wildfly8x.path>
+	</properties>
+
+	<dependencies>
+
+		<!-- jbehave core -->
+		<dependency>
+			<groupId>org.jbehave</groupId>
+			<artifactId>jbehave-core</artifactId>
+			<version>3.9</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- jbehave web -->
+		<dependency>
+			<groupId>org.jbehave.web</groupId>
+			<artifactId>jbehave-web-selenium</artifactId>
+			<version>3.6-beta-1</version>
+			<scope>test</scope>
+			<exclusions>
+				<!-- excluindo para obter driver mais novo individualmente -->
+				<exclusion>
+					<artifactId>selenium-java</artifactId>
+					<groupId>org.seleniumhq.selenium</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<!-- agora incluo a versão mais nova com suporte para o firefox mais novo -->
+		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-java</artifactId>
+			<version>2.41.0</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- esta dependencia é necessaria para o plugin do cargo funcionar -->
+		<!-- e usado para os contextos de teste -->
+		<dependency>
+			<groupId>org.jboss.as.quickstarts</groupId>
+			<artifactId>jboss-as-kitchensink</artifactId>
+			<version>7.1.2-SNAPSHOT</version>
+			<scope>test</scope>
+			<type>war</type>
+		</dependency>
+
+		<!-- biblioteca para criar contexto de teste -->
+		<dependency>
+			<groupId>br.com.six2six</groupId>
+			<artifactId>fixture-factory</artifactId>
+			<version>2.1.0</version>
+		</dependency>
+		<!-- conexão com o h2 para preparar banco para contexto de teste -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<version>1.4.177</version>
+		</dependency>
+
+	</dependencies>
+
+	<build>
+		<plugins>
+
+			<!-- cargo é usado para iniciar e desligar o jboss para executar os testes 
+				de integração -->
+			<plugin>
+				<groupId>org.codehaus.cargo</groupId>
+				<artifactId>cargo-maven2-plugin</artifactId>
+				<version>1.4.7</version>
+				<executions>
+					<!-- na fase de 'pre-integration-test' inicia o jboss71x -->
+					<execution>
+						<id>start-container</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>start</goal>
+						</goals>
+					</execution>
+					<!-- na fase de 'pos-integration-test' desliga o jboss71x -->
+					<execution>
+						<id>stop-container</id>
+						<phase>post-integration-test</phase>
+						<goals>
+							<goal>stop</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<!-- usamos um jboss previamente já instalado e descompactado -->
+					<container>
+						<containerId>wildfly8x</containerId>
+						<home>${wildfly8x.path}</home>
+					</container>
+					<!-- instala o WAR no jboss71x -->
+					<deployables>
+						<deployable>
+							<groupId>org.jboss.as.quickstarts</groupId>
+							<artifactId>jboss-as-kitchensink</artifactId>
+							<type>war</type>
+							<pingURL>${jboss.host.url}/index.html</pingURL>
+						</deployable>
+					</deployables>
+				</configuration>
+			</plugin>
+
+			<!-- execução do JUnit na fase de 'integration-test' -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>2.17</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<!-- 'goal' é necessario para que o plugin falhe em caso de erro -->
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<includes>
+						<include>**/ExampleStory.java</include>
+					</includes>
+				</configuration>
+			</plugin>
+
+		</plugins>
+	</build>
+
+</project>
