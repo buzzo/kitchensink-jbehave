@@ -14,61 +14,76 @@ import br.com.six2six.fixturefactory.Rule;
 
 public class ExampleSteps {
 
-    static {
-        Fixture.of(Member.class).addTemplate("default", new Rule() {
-            {
-                add("id", random(Long.class, range(1L, 200L)));
-                add("name", random("Leonardo da Silva", "Gustavo Gongo"));
-                add("email", "member@gmail.com");
-                add("phoneNumber", "12345678901");
-            }
-        });
-    }
+	private final RegisterPage home;
 
-    private final HomePage home;
+	public ExampleSteps(final WebDriverProvider webdriver) {
+		this.home = new RegisterPage(webdriver);
+	}
 
-    public ExampleSteps(final WebDriverProvider webdriver) {
-        this.home = new HomePage(webdriver);
-    }
+	static {
+		Fixture.of(Member.class).addTemplate("default", new Rule() {
+			{
+				add("id", random(Long.class, range(1L, 200L)));
+				add("name", random("Leonardo da Silva", "Gustavo Gongo"));
+				add("email", "member@gmail.com");
+				add("phoneNumber", "12345678901");
+			}
+		});
+	}
 
-    @When("preenche corretamente o telefone")
-    public void andPreencheCorretamenteOTelefone() {
-        this.home.type_phone("123456789012");
-    }
+	@BeforeScenario
+	public void before() throws Exception {
+		DatabaseUtil.clearDatabase();
+	}
 
-    @When("pressiona o botao registrar")
-    public void andPressionaOBotãoRegistrar() {
-        this.home.register();
-    }
+	@Given("ja existe um cliente registrado")
+	public void givenJaExisteUmClienteRegistrado() throws Exception {
+		final Member member = Fixture.from(Member.class).gimme("default");
+		DatabaseUtil.save(member);
+	}
 
-    @BeforeScenario
-    public void before() throws Exception {
-        DatabaseUtil.clearDatabase();
-    }
+	@When("preenche o email de um cliente ja registrado")
+	public void whenPreencheOEmailDeUmClienteJaRegistrado() {
+		this.home.type_email("member@gmail.com");
+	}
 
-    @Given("ja existe um cliente registrado")
-    public void givenJaExisteUmClienteRegistrado() throws Exception {
-        final Member member = Fixture.from(Member.class).gimme("default");
-        DatabaseUtil.save(member);
-    }
+	@Then("a mensagem de email ja registrado eh mostrada")
+	public void thenAMensagemDeEmailJaRegistradoEhMostrada() {
+		Assert.assertTrue(
+				"Mensagem de email duplicado nao encontrada.",
+				this.home.getRegisterMessage().contains(
+						"Unique index or primary key violation"));
+	}
 
-    @Given("o cliente esta na tela de registro")
-    public void givenOClienteEstaNaTelaDeRegistro() {
-        this.home.open();
-    }
+	@Given("o usuario esta na tela de cadastro")
+	public void givenOUsuarioEstaNaTelaDeCadastro() {
+		this.home.open();
+	}
 
-    @Then("o cadastro eh realizado com sucesso")
-    public void thenOCadastroÉRealizadoComSucesso() {
-        Assert.assertEquals("Mensagem de sucesso de cadastro invalida", "Registered!", this.home.getRegisterMessage());
-    }
+	@When("ele digita corretamente o nome")
+	public void whenEleDigitaCorretamenteONome() {
+		this.home.type_name("Andre");
+	}
 
-    @When("preenche corretamente o email")
-    public void whenPreencheCorretamenteOEmail() {
-        this.home.type_email("andre@buzzo.com.br");
-    }
+	@When("ele digita corretamente o email")
+	public void whenEleDigitaCorretamenteOEmail() {
+		this.home.type_email("andre@buzzo.com.br");
+	}
 
-    @When("preenche corretamente o nome")
-    public void whenPreencheCorretamenteONome() {
-        this.home.type_name("andre");
-    }
+	@When("ele digita corretamente o numero do telefone")
+	public void whenEleDigitaCorretamenteONumeroDoTelefone() {
+		this.home.type_phone("12345678901");
+	}
+
+	@When("ele pressiona o botao de registro")
+	public void whenElePressionaOBotaoDeRegistro() {
+		this.home.register();
+	}
+
+	@Then("o cadastro eh realizado com sucesso")
+	public void thenOCadastroEhRealizadoComSucesso() {
+		Assert.assertEquals("Mensagem de sucesso de cadastro invalida",
+				"Registered!", this.home.getRegisterMessage());
+	}
+
 }

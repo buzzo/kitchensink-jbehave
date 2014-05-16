@@ -30,10 +30,10 @@ import org.jbehave.web.selenium.WebDriverSteps;
 
 public class ExampleStory extends JUnitStories {
 
-    static {
-        System.setProperty("browser", "phantomjs");
-        System.setProperty("phantomjs.binary.path", "/opt/phantomjs");
-    }
+//    static {
+//        System.setProperty("browser", "phantomjs");
+//        System.setProperty("phantomjs.binary.path", "/opt/phantomjs");
+//    }
 
     private WebDriverProvider driverProvider = new PropertyWebDriverProvider();
     private WebDriverSteps    lifecycleSteps = new PerStoriesWebDriverSteps(this.driverProvider);
